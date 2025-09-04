@@ -32,7 +32,7 @@ node <(
     # Google Apps Script (GAS) project files
     while IFS= read -r script; do
         cat "$script"
-    done <.order-of-execution
+    done <.order-of-execution 2>/dev/null
     unset script
 
     # Run additional Google Apps Script files
@@ -53,6 +53,6 @@ node <(
         done <"$script"
         tail -n "+$((current_line + 1))" "$script"
         unset current_line
-    done
+    done 2>/dev/null
     unset script
 )
