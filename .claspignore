@@ -1,0 +1,11 @@
+.git/**
+
+README*
+SecretSantaJS/LICENSE*
+SecretSantaJS/README*
+SecretSantaJS/TODO*
+
+gas-interpreter
+.order-of-execution
+local-test
+testData.json

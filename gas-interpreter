@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+
+CLASP_CONFIG='.clasp.json'
+ORDER_OF_EXECUTION='.order-of-execution'
+
+if ! diff <(jq -r '.filePushOrder[]' "$CLASP_CONFIG" | sed "s%^${PWD}/%%") "$ORDER_OF_EXECUTION" 2>/dev/null; then
+    echo "${CLASP_CONFIG} does not match $ORDER_OF_EXECUTION"
+    exit 1
+fi
+
+missing=0
+while IFS= read -r script; do
+    if [[ -f "$script" ]]; then
+        echo "✅ Found: $script"
+    else
+        echo "❌ Missing: $script"
+        missing=1
+    fi
+done <.order-of-execution
+
+case "$missing" in
+0)
+    echo "All files exist."
+    ;;
+1)
+    echo "Some scripts are missing."
+    exit 1
+    ;;
+esac
+
+node <(
+    # Google Apps Script (GAS) project files
+    while IFS= read -r script; do
+        cat "$script"
+    done <.order-of-execution
+    unset script
+
+    # Run additional Google Apps Script files
+    for script in "$@"; do
+        # Remove shebang lines like Node.js would
+        current_line=0
+        while IFS= read -r line; do
+            ((current_line++))
+            if [[ $line =~ ^[[:space:]]*$ ]]; then
+                echo "$line"
+            elif [[ $line =~ ^#!.+ ]]; then
+                echo '/** SHEBANG LINE REMOVED BY GAS INTERPRETER **/'
+                break
+            else
+                echo "$line"
+                break
+            fi
+        done <"$script"
+        tail -n "+$((current_line + 1))" "$script"
+        unset current_line
+    done
+    unset script
+)

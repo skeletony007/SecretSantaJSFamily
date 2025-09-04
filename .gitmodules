@@ -1,0 +1,3 @@
+[submodule "SecretSantaJS"]
+	path = SecretSantaJS
+	url = git@github.com:skeletony007/SecretSantaJS.git

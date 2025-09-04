@@ -1,0 +1,45 @@
+#!./gas-interpreter
+
+// vim: set ft=javascript :
+
+const fs = require('node:fs');
+
+function test(years) {
+  // Load anonymised test data
+  const data = JSON.parse(fs.readFileSync('./testData.json'));
+
+  for (let i = 0; i < years; i++) {
+    const secretSanta = new SecretSanta(data.state);
+
+    for (const name of data.participants) secretSanta.addParticipant(name);
+
+    const draw = secretSanta.draw();
+
+    const recipients = new Set();
+    for (let i = 0; i < draw.length; i++) {
+      const pair = draw[i];
+      if (recipients.has(pair.recipient)) {
+        throw new Error('Duplicate recipients found in Secret Santa pairs.');
+      } else if (pair.name == pair.recipient) {
+        throw new Error('Pair name matches recipient name in Secret Santa pairs.');
+      } else {
+        recipients.add(pair.recipient);
+      }
+    }
+
+    const nextState = secretSanta.toJSON();
+    validateJson(nextState, dataSchema.state);
+    data.state = nextState;
+  }
+
+  console.log(
+    'Average number of repeated recipients per year:',
+    data.state.reduce((acc, participant) => {
+      return acc + participant.stats.recipientRepeatFrequency;
+    }, 0) / years
+  );
+
+  return data;
+}
+
+console.log(JSON.stringify(test(100)));
